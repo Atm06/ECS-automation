@@ -1,0 +1,76 @@
+pipeline {
+    agent any
+    
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+        IMAGE_NAME = 'my-ecs-repo/my-app'
+        TASK_FAMILY = 'my-task-family'
+        CLUSTER = 'my-ecs-cluster'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+        
+        stage('Push to ECR') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh "aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
+                    sh "docker tag $IMAGE_NAME $ECR_REGISTRY/$IMAGE_NAME"
+                    sh "docker push $ECR_REGISTRY/$IMAGE_NAME"
+                }
+            }
+        }
+        
+        stage('Update Task Definition') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh "aws ecs register-task-definition --family $TASK_FAMILY --container-definitions file://ecs-task-def.json"
+                }
+            }
+        }
+        
+        stage('Update Service') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh "aws ecs update-service --cluster $CLUSTER --service my-service --force-new-deployment --task-definition $TASK_FAMILY:1"
+                }
+            }
+        }
+    }
+}
+
+
+In this example Jenkinsfile:
+
+The environment block sets up environment variables for the AWS region, ECS image name, task family name, and ECS cluster name.
+The stages block contains four stages: Checkout, Build, Push to ECR, Update Task Definition, and Update Service.
+The Checkout stage checks out the Git repository containing the application source code.
+The Build stage builds the Docker image for the application.
+The Push to ECR stage pushes the Docker image to the Amazon Elastic Container Registry (ECR).
+The Update Task Definition stage registers a new task definition for the application in ECS.
+The Update Service stage updates the ECS service with the new task definition, triggering a new deployment.
+Note that this Jenkinsfile assumes that you have created an ECS task definition file named ecs-task-def.json in the same directory as the Jenkinsfile. This file should define the containers that make up the ECS task. You will need to modify the various parameters in this Jenkinsfile to match your specific AWS and ECS setup.
+
+
