@@ -62,15 +62,4 @@ pipeline {
 }
 
 
-In this example Jenkinsfile:
-
-The environment block sets up environment variables for the AWS region, ECS image name, task family name, and ECS cluster name.
-The stages block contains four stages: Checkout, Build, Push to ECR, Update Task Definition, and Update Service.
-The Checkout stage checks out the Git repository containing the application source code.
-The Build stage builds the Docker image for the application.
-The Push to ECR stage pushes the Docker image to the Amazon Elastic Container Registry (ECR).
-The Update Task Definition stage registers a new task definition for the application in ECS.
-The Update Service stage updates the ECS service with the new task definition, triggering a new deployment.
-Note that this Jenkinsfile assumes that you have created an ECS task definition file named ecs-task-def.json in the same directory as the Jenkinsfile. This file should define the containers that make up the ECS task. You will need to modify the various parameters in this Jenkinsfile to match your specific AWS and ECS setup.
-
 
