@@ -1,0 +1,22 @@
+*ECS SERVICE*
+
+
+
+#!/bin/bash
+
+# Set variables
+CLUSTER_NAME="my-cluster"
+SERVICE_NAME="my-service"
+TASK_DEFINITION_ARN="arn:aws:ecs:us-east-1:123456789012:task-definition/my-task-def:1"
+DESIRED_TASKS=2
+LB_NAME="my-load-balancer"
+CONTAINER_PORT=80
+
+# Create the ECS service
+aws ecs create-service \
+  --cluster $CLUSTER_NAME \
+  --service-name $SERVICE_NAME \
+  --task-definition $TASK_DEFINITION_ARN \
+  --desired-count $DESIRED_TASKS \
+  --load-balancers targetGroupArn=$LB_NAME,containerName=my-container,containerPort=$CONTAINER_PORT \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-0123456789abcdef0,subnet-0123456789abcdef1],securityGroups=[sg-0123456789abcdef],assignPublicIp=DISABLED}"
