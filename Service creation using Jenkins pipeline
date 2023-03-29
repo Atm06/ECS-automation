@@ -1,0 +1,32 @@
+*ECS SERVICE CREATION JENKINS FILE*
+
+
+def ecsServiceName = "my-ecs-service"
+def ecsClusterName = "my-ecs-cluster"
+def taskDefinitionArn = "arn:aws:ecs:us-east-1:123456789012:task-definition/my-task-definition:1"
+
+def existingService = sh(
+    script: "aws ecs describe-services --cluster ${ecsClusterName} --services ${ecsServiceName} --query 'services[0].serviceName'",
+    returnStdout: true,
+    returnStatus: true
+)
+
+if (existingService == 0) {
+    echo "Service already exists, skipping service creation."
+} else {
+    sh """
+        aws ecs create-service --cluster ${ecsClusterName} --service-name ${ecsServiceName} \
+        --task-definition ${taskDefinitionArn} --desired-count 2 \
+        --load-balancers targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/my-target-group/abcd1234efgh5678 \
+        --launch-type FARGATE --platform-version LATEST \
+        --network-configuration "awsvpcConfiguration={subnets=[subnet-12345678,subnet-23456789],securityGroups=[sg-12345678]}"
+    """
+}
+
+
+
+########################################
+
+In this script, we first define the name of the ECS service (ecsServiceName), the name of the ECS cluster (ecsClusterName), and the ARN of the task definition to use for the service (taskDefinitionArn).
+
+We then use the aws ecs describe-services command to check if the service already exists. If it does, we skip the creation step. If it doesn't exist, we use the aws ecs create-service command to create the service with the desired configurations, including the number of desired tasks (--desired-count), load balancer configuration (`
