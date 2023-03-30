@@ -1,0 +1,66 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ECS service with VPC, Subnet, and security groups",
+  "Parameters": {
+    "ClusterName": {
+      "Type": "String",
+      "Description": "Name of the ECS cluster"
+    },
+    "ServiceName": {
+      "Type": "String",
+      "Description": "Name of the ECS service"
+    },
+    "TaskDefinition": {
+      "Type": "String",
+      "Description": "ARN of the ECS task definition"
+    },
+    "DesiredCount": {
+      "Type": "Number",
+      "Description": "Desired number of tasks to run"
+    },
+    "LaunchType": {
+      "Type": "String",
+      "Description": "Launch type for the task",
+      "AllowedValues": [
+        "EC2",
+        "FARGATE"
+      ]
+    },
+    "PlatformVersion": {
+      "Type": "String",
+      "Description": "Platform version to use for the task"
+    },
+    "VPC": {
+      "Type": "String",
+      "Description": "ID of the VPC to use"
+    },
+    "Subnets": {
+      "Type": "CommaDelimitedList",
+      "Description": "IDs of the subnets to use"
+    },
+    "SecurityGroups": {
+      "Type": "CommaDelimitedList",
+      "Description": "IDs of the security groups to use"
+    }
+  },
+  "Resources": {
+    "EcsService": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "Cluster": { "Ref": "ClusterName" },
+        "ServiceName": { "Ref": "ServiceName" },
+        "TaskDefinition": { "Ref": "TaskDefinition" },
+        "DesiredCount": { "Ref": "DesiredCount" },
+        "LaunchType": { "Ref": "LaunchType" },
+        "PlatformVersion": { "Ref": "PlatformVersion" },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "Subnets": { "Ref": "Subnets" },
+            "SecurityGroups": { "Ref": "SecurityGroups" },
+            "AssignPublicIp": "DISABLED"
+          }
+        }
+      }
+    }
+  }
+}
